@@ -55,7 +55,11 @@ class MACEBackbone(nn.Module):
             n_sc = sum(mul * ir.dim for mul, ir in irr if ir.l == 0)
             self.scalar_slices.append(n_sc)
             n_scalar += n_sc
-        self.proj = nn.Linear(n_scalar, d)
+        # scale-match the backbone boundary: raw MACE scalars come out ~8x
+        # smaller and with ~20x less per-atom spread than the schnet features
+        # the charge channel was built around; without this the SSM routing
+        # optimization crawls (AuMgO notail contrast stuck at -5 vs -132)
+        self.proj = nn.Sequential(nn.Linear(n_scalar, d), nn.LayerNorm(d))
 
     def forward(self, pos, species, mask, cell=None):
         B, N = species.shape

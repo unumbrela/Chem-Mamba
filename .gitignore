@@ -1,0 +1,11 @@
+# 数据集(Materials Cloud bk6kw-4b895 下载,~171M)与训练产物不入库
+data/
+chem_mamba/results/
+*.log
+*.pt
+*.ckpt
+__pycache__/
+*.pyc
+
+# 研究笔记/论文草稿,发表前不公开
+docs/

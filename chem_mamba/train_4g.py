@@ -245,6 +245,10 @@ def main():
     ap.add_argument('--ema', type=float, default=0.0,
                     help='EMA decay for weight averaging (e.g. 0.999); 0 = off. '
                          'Val/test are evaluated with the EMA weights')
+    ap.add_argument('--backbone', default='schnet', choices=['schnet', 'mace'],
+                    help='mace: equivariant MACE backbone (mace-torch), '
+                         'invariant node features feed the unchanged charge '
+                         'channel; results filename gets a _mace suffix')
     ap.add_argument('--eval-batch', type=int, default=256,
                     help='eval batch size; lower it for large periodic systems '
                          'to cap the eval-time VRAM spike (forces need the '
@@ -293,9 +297,27 @@ def main():
     else:
         wq_el = None
 
+    backbone_kw = None
+    if args.backbone == 'mace':
+        from ase.data import atomic_numbers as ase_z
+        from chem_mamba.model4g import pair_dist
+        zs = [ase_z[e] for e in data['elems']]
+        # avg_num_neighbors normalizes MACE message sums; estimate it on the
+        # train split with the same minimum-image convention as the model
+        sub = tr[:512]
+        p, mk = data['pos'][sub], data['mask'][sub]
+        cl = data['lattice'][sub] if 'lattice' in data else None
+        r = pair_dist(p, cl)
+        eye = torch.eye(r.shape[1], dtype=torch.bool)[None]
+        nn_pair = mk[:, :, None] & mk[:, None, :] & (~eye) & (r < args.cutoff)
+        ann = (nn_pair.sum().item() / mk.sum().item())
+        backbone_kw = dict(atomic_numbers=zs, avg_num_neighbors=max(ann, 1.0))
+        print(f"[mace] Z={zs}, avg_num_neighbors={ann:.2f}")
+
     model = make_model(args.model, n_species, d=args.d, n_layers=args.layers,
                        cutoff=args.cutoff, order=args.order, tail=args.tail,
-                       detach_elec=args.detach_elec).to(dev)
+                       detach_elec=args.detach_elec, backbone=args.backbone,
+                       backbone_kw=backbone_kw).to(dev)
     n_par = sum(p.numel() for p in model.parameters())
     print(f"[model] {args.model}: {n_par/1e3:.1f}k params")
 
@@ -308,6 +330,8 @@ def main():
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.steps, 1e-5)
     os.makedirs(os.path.join(os.path.dirname(__file__), 'results'), exist_ok=True)
     suffix = f"_{args.tag}" if args.tag else ''
+    if args.backbone != 'schnet':
+        suffix = f"_{args.backbone}" + suffix
     out = os.path.join(os.path.dirname(__file__), 'results',
                        f"{args.dataset}_{args.model}_s{args.seed}{suffix}.json")
     ckpt = out.replace('.json', '.ckpt.pt')   # rolling best (crash insurance)

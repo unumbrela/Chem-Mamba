@@ -169,7 +169,8 @@ class ChemMamba4G(nn.Module):
     def __init__(self, n_species, d=64, n_layers=2, cutoff=3.5, n_rbf=20,
                  use_ssm=True, mix=True, use_Q=True, ssm_layers=2, d_state=16,
                  sigma=1.0, order='centroid', tail='coulomb', mixer=None,
-                 summary=False, charge_mode='nn', detach_elec=False):
+                 summary=False, charge_mode='nn', detach_elec=False,
+                 backbone='schnet', backbone_kw=None):
         super().__init__()
         self.use_ssm, self.mix, self.use_Q, self.sigma = use_ssm, mix, use_Q, sigma
         self.order = order
@@ -182,7 +183,14 @@ class ChemMamba4G(nn.Module):
                            # Isolates energy-charge gradient competition as the
                            # cause of SSM routing collapse under energy coupling.
         self.charge_mode = charge_mode   # 'nn' | 'qeq' (differentiable global solve)
-        self.backbone = MaskedBackbone(n_species, d, n_layers, cutoff, n_rbf)
+        if backbone == 'mace':
+            # equivariant MACE backbone (plug-and-play swap; lazy import keeps
+            # mace-torch an optional dependency for the schnet path)
+            from .mace_backbone import MACEBackbone
+            self.backbone = MACEBackbone(n_species, d, n_layers, cutoff,
+                                         **(backbone_kw or {}))
+        else:
+            self.backbone = MaskedBackbone(n_species, d, n_layers, cutoff, n_rbf)
         self.q_embed = nn.Linear(1, d) if use_Q else None
         self.ssm = MaskedSSM(d, d_state, ssm_layers, summary) if use_ssm else None
         self.attn = MaskedAttention(d) if mixer == 'attn' else None

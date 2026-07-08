@@ -1,0 +1,31 @@
+{
+  "carbon_chain_pubchem": {
+    "local": "assets/chem/carbon_chain_pubchem.png",
+    "source": "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/smiles/C%23CC%23CC%23CC%23CC%23C/PNG?image_size=large",
+    "note": "Generated via PubChem PUG-REST from a C10H2 polyyne SMILES."
+  },
+  "silver_crystal": {
+    "local": "assets/chem/silver_crystal.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Silver_crystal.jpg",
+    "license": "CC BY-SA 3.0 de / FAL / GFDL 1.2 options on file page",
+    "author": "Alchemist-hp; additional processing by Waugsberg"
+  },
+  "sodium_chloride_3d_ionic": {
+    "local": "assets/chem/sodium_chloride_3d_ionic.png",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Sodium-chloride-3D-ionic.png",
+    "license": "Public domain",
+    "author": "Benjah-bmm27"
+  },
+  "magnesium_oxide_3d_vdw": {
+    "local": "assets/chem/magnesium_oxide_3d_vdw.png",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Magnesium-oxide-3D-vdW.png",
+    "license": "Public domain",
+    "author": "Hoa112008"
+  },
+  "gold_crystals": {
+    "local": "assets/chem/gold_crystals.jpg",
+    "source_page": "https://commons.wikimedia.org/wiki/File:Gold-crystals.jpg",
+    "license": "CC BY-SA 3.0 de / FAL / GFDL 1.2 options on file page",
+    "author": "Alchemist-hp"
+  }
+}

@@ -9,3 +9,7 @@ __pycache__/
 
 # 研究笔记/论文草稿,发表前不公开
 docs/
+
+# 外部参考代码/论文
+external/
+papers/
